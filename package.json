@@ -1,0 +1,37 @@
+{
+  "name": "instagoodguy",
+  "version": "1.0.0",
+  "description": "Instagram Private Api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tranduongms/instagoodguy.git"
+  },
+  "keywords": [
+    "instagram",
+    "instagram",
+    "private",
+    "api",
+    "instagram",
+    "phone",
+    "api"
+  ],
+  "author": "tranduongms@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tranduongms/instagoodguy/issues"
+  },
+  "homepage": "https://github.com/tranduongms/instagoodguy#readme",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "image-size": "^0.6.3",
+    "js-md5": "^0.7.3",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "tough-cookie-filestore": "0.0.1",
+    "uuid": "^3.3.2"
+  }
+}
