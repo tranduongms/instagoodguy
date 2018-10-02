@@ -124,7 +124,7 @@ class Client {
         }
     }
 
-    callApi(enpoint, data, jsonResponse = true, signData = true, version = 'v1') {
+    callApi(enpoint, data = {}, jsonResponse = true, signData = true, version = 'v1') {
         let url = constants.API_URL + version + '/' + enpoint;
         let option = {
             headers: Object.assign({}, data.headers),
@@ -333,6 +333,10 @@ class Client {
                 }
             }
         }
+    }
+
+    async getMediaInfo(mediaId) {
+        return this.callApi(`media/${mediaId}/info/`);
     }
 
     async deleteMedia(mediaId) {
