@@ -19,7 +19,11 @@ class Client {
         this.username = username;
         this.password = password;
         this.proxy = proxy;
-        this.cookieStore = new FileCookieStore(path.join(os.tmpdir(), this.username + '.json'));
+        let storePath = path.join(os.tmpdir(), this.username + '.json');
+        if (!fs.existsSync(storePath)) {
+            fs.writeFileSync(storePath, '');
+        }
+        this.cookieStore = new FileCookieStore(storePath);
         this.jar = request.jar(this.cookieStore);
         this.request = request.defaults({
             headers: this.defaultHeaders(),
