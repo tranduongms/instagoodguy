@@ -161,7 +161,9 @@ class Client {
             }
             option.headers['Content-type'] = 'multipart/form-data; charset=UTF-8';
         }
-        console.log(`enpoint ${enpoint}; option: ${JSON.stringify(option)}`);
+        if (process.env.NODE_DEBUG && process.env.NODE_DEBUG.indexOf('instagoodgy') >= 0) {
+            console.log(`[DEBUG] Enpoint ${enpoint}; option: ${JSON.stringify(option)}`);
+        }
         return this.request.post(url, option);
     }
 
