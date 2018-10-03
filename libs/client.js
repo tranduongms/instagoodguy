@@ -411,7 +411,7 @@ class Client {
                 let code;
                 if (error.step_data.form_type == 'phone_number') {
                     try {
-                        code = await getPhoneCodePromise();
+                        code = await getPhoneCodePromise(error.number);
                         console.log(`Got verify code send to phone ${code}`);
                     } catch (err) {
                         throw new Error(`Can't get verify code from getPhoneCodePromise`);
