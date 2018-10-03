@@ -215,7 +215,7 @@ class Client {
     }
 
     async checkUsername(username) {
-        return this.callApi('users/check_username/', { form: { username } });
+        return this.callApi('users/check_username/', { form: { username } }).then(res => (res.status == 'ok' && res.available));
     }
 
     async updateProfile(update = {}) {
