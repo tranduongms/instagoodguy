@@ -421,7 +421,7 @@ class Client {
                 } else if (error.step_data.form_type == 'email') {
                     try {
                         console.log(`Waiting for verify code sent to email`);
-                        await new Promise(res => setTimeout(res, 10000));
+                        await new Promise(res => setTimeout(res, 30000));
                         code = await getEmailCodePromise(error.step_data.contact_point);
                         console.log(`Got verify code send to email ${code}`);
                     } catch (err) {
