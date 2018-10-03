@@ -369,6 +369,7 @@ class Client {
             json: true,
             gzip: true,
             jar: this.jar,
+            proxy: this.proxy,
             followRedirect: true
         });
         let res;
