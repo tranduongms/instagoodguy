@@ -411,6 +411,7 @@ class Client {
                 let code;
                 if (error.step_data.form_type == 'phone_number') {
                     try {
+                        console.log(`Waiting for verify code sent to phone`);
                         code = await getPhoneCodePromise(error.number);
                         console.log(`Got verify code send to phone ${code}`);
                     } catch (err) {
@@ -418,6 +419,8 @@ class Client {
                     }
                 } else if (error.step_data.form_type == 'email') {
                     try {
+                        console.log(`Waiting for verify code sent to email`);
+                        await new Promise(res => setTimeout(res, 10000));
                         code = await getEmailCodePromise(error.step_data.contact_point);
                         console.log(`Got verify code send to email ${code}`);
                     } catch (err) {
