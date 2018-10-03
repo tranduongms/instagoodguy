@@ -1,16 +1,32 @@
 'use strict';
 
-function CookieNotValidError(cookieName) {
-    this.name = 'CookieNotValidError';
-    this.message = "Cookie `" + cookieName + "` you are searching found was either not found or not valid!";
+class CookieNotValidError extends Error {
+    constructor(cookieName) {
+        super(`Cookie "${cookieName}" you are searching found was either not found or not valid!`);
+        this.name = 'CookieNotValidError';
+        this.cookieName = cookieName;
+    }
 }
 
-function LoginError() {
-    this.name = 'LoginError';
-    this.message = `Login error!`;
+class LoginError extends Error {
+    constructor(username) {
+        super(`Account ${username} unable to login!`);
+        this.name = 'LoginError';
+        this.username = username;
+    }
+}
+
+class CheckpointChallengeError extends Error {
+    constructor(username, challenge) {
+        super(`Account ${username} checkpoint challenge!`);
+        this.name = 'CheckpointChallengeError';
+        this.username = username;
+        this.challenge = challenge;
+    }
 }
 
 module.exports = {
     CookieNotValidError,
-    LoginError
+    LoginError,
+    CheckpointChallengeError
 }

@@ -9,6 +9,7 @@ const md5 = require('js-md5');
 const uuid4 = require('uuid/v4');
 const hmac = require('crypto-js/hmac-sha256');
 const sizeOf = require('image-size');
+const requestErrors = require('request-promise/errors');
 
 const constants = require('./constants');
 const Exceptions = require('./exceptions');
@@ -161,10 +162,15 @@ class Client {
             }
             option.headers['Content-type'] = 'multipart/form-data; charset=UTF-8';
         }
-        if (process.env.NODE_DEBUG && process.env.NODE_DEBUG.indexOf('instagoodgy') >= 0) {
-            console.log(`[DEBUG] Enpoint ${enpoint}; option: ${JSON.stringify(option)}`);
-        }
-        return this.request.post(url, option);
+        return this.request
+            .post(url, option)
+            .catch(requestErrors.StatusCodeError, err => {
+                if (err.error.error_type == 'checkpoint_challenge_required') {
+                    throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
+                } else {
+                    console.error(err);
+                }
+            });
     }
 
     async login() {
@@ -191,7 +197,7 @@ class Client {
         }
         let jsonRes = await this.callApi('accounts/login/', { form: loginData });
         if (!jsonRes.logged_in_user || !jsonRes.logged_in_user.pk) {
-            throw Exceptions.LoginError('Unable to login!');
+            throw Exceptions.LoginError(this.username);
         } else {
             this.loggedIn = true;
             this.csrfToken = await this.getCsrfToken();
@@ -229,7 +235,7 @@ class Client {
         return this.callApi('accounts/edit_profile/', { form: Object.assign({}, profile, this.getAuthenticatedParams()) });
     }
 
-    removeProfilePicture() {
+    async removeProfilePicture() {
         return this.callApi('accounts/remove_profile_picture/', { form: this.getAuthenticatedParams() })
     }
 
@@ -273,11 +279,6 @@ class Client {
     async getMyFeed(qs) {
         let id = await this.getAuthenticatedUserId();
         return this.getFeedByUserId(id, qs);
-    }
-
-    async getDetailByUserId(userId) {
-        console.warn(`WARNING: The "users/user_id/full_detail_info/" endpoint is experimental. Be carefully use!`);
-        return this.callApi(`users/${userId}/full_detail_info/`);
     }
 
     async configPhoto(uploadId, size, caption, disableComments, isSidecar) {
@@ -351,6 +352,94 @@ class Client {
                 form: Object.assign({}, this.getAuthenticatedParams(), { media_id: mediaId })
             }
         );
+    }
+
+    async passChallenge(error, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method = 'email') {
+        let req = request.defaults({
+            headers: {
+                'User-Agent': constants.IPHONE_USER_AGENT,
+                'Connection': 'close',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US',
+                'Accept-Encoding': 'gzip, deflate',
+                'Upgrade-Insecure-Requests': '1',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            },
+            json: true,
+            gzip: true,
+            jar: this.jar,
+            followRedirect: true
+        });
+        let res;
+        console.log(error);
+        if (error instanceof Exceptions.CheckpointChallengeError) {
+            let apiUrl = 'https://i.instagram.com/api/v1' + error.challenge.api_path;
+            res = await req.post(apiUrl.replace('/challenge/', '/challenge/reset/'));
+            res.apiUrl = apiUrl;
+            return this.passChallenge(res, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method);
+        } else {
+            if (error.step_name == 'select_verify_method') {
+                res = await req.post(error.apiUrl, {
+                    form: { choice: method === 'email' ? 1 : 0 }
+                });
+                res.apiUrl = error.apiUrl;
+                return this.passChallenge(res, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method);
+            } else if (error.step_name == 'submit_phone') {
+                let number;
+                if (typeof getPhoneNumberPromise == 'function') {
+                    try {
+                        number = await getPhoneNumberPromise();
+                        console.log(`Got phone number ${number}`);
+                    } catch (err) {
+                        throw new Error(`Can't get phone number from getPhoneNumberPromise`);
+                    }
+                } else {
+                    if (error.step_data && error.step_data.phone_number) {
+                        number = error.step_data.phone_number;
+                    } else {
+                        throw new Error(`Can't get phone number from instagram`);
+                    }
+                }
+                // Submit phone number
+                res = await req.post(error.apiUrl, {
+                    form: { phone_number: number }
+                });
+                res.apiUrl = error.apiUrl;
+                res.number = number;
+                return this.passChallenge(res, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method);
+            } else if (error.step_name == 'verify_code' || error.step_name == 'verify_email') {
+                let code;
+                if (error.step_data.form_type == 'phone_number') {
+                    try {
+                        code = await getPhoneCodePromise();
+                        console.log(`Got verify code send to phone ${code}`);
+                    } catch (err) {
+                        throw new Error(`Can't get verify code from getPhoneCodePromise`);
+                    }
+                } else if (error.step_data.form_type == 'email') {
+                    try {
+                        code = await getEmailCodePromise(error.step_data.contact_point);
+                        console.log(`Got verify code send to email ${code}`);
+                    } catch (err) {
+                        throw new Error(`Can't get verify code from getEmailCodePromise`);
+                    }
+                }
+                if (!code || code.length != 6) {
+                    throw new Error(`Verify code ${code} is not valid`);
+                }
+                // Submit verify code
+                console.log(`Submit verify code ${code}`);
+                await req.post(error.apiUrl, {
+                    form: { security_code: code }
+                }).catch(requestErrors.StatusCodeError, err => {
+                    throw new Error(`Can't bypass challenge, ${err.message}`);
+                });
+                console.log(`Pass challenge success`);
+            } else {
+                throw new Error(`Verify method not supported: ${error}`);
+            }
+        }
     }
 }
 
