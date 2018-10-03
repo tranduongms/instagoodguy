@@ -372,7 +372,6 @@ class Client {
             followRedirect: true
         });
         let res;
-        console.log(error);
         if (error instanceof Exceptions.CheckpointChallengeError) {
             let apiUrl = 'https://i.instagram.com/api/v1' + error.challenge.api_path;
             res = await req.post(apiUrl.replace('/challenge/', '/challenge/reset/'));
