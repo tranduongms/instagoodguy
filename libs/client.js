@@ -23,6 +23,13 @@ class Client {
         let storePath = path.join(os.tmpdir(), this.username + '.json');
         if (!fs.existsSync(storePath)) {
             fs.writeFileSync(storePath, '');
+        } else {
+            let data = fs.readFileSync(storePath).toString();
+            try {
+                JSON.parse(data);
+            } catch (error) {
+                fs.writeFileSync(storePath, '');
+            }
         }
         this.cookieStore = new FileCookieStore(storePath);
         this.jar = request.jar(this.cookieStore);
