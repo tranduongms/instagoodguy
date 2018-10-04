@@ -165,7 +165,7 @@ class Client {
         return this.request
             .post(url, option)
             .catch(requestErrors.StatusCodeError, err => {
-                if (err.error.error_type == 'checkpoint_challenge_required') {
+                if ((err.statusCode == 400) && (err.error.challenge)) {
                     throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
                 } else {
                     console.error(err);
@@ -385,7 +385,7 @@ class Client {
                 });
                 res.apiUrl = error.apiUrl;
                 return this.passChallenge(res, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method);
-            } else if (error.step_name == 'submit_phone') {
+            } else if (!error.step_name || (error.step_name == 'submit_phone')) {
                 let number;
                 if (typeof getPhoneNumberPromise == 'function') {
                     try {
@@ -410,7 +410,7 @@ class Client {
                 return this.passChallenge(res, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method);
             } else if (error.step_name == 'verify_code' || error.step_name == 'verify_email') {
                 let code;
-                if (error.step_data.form_type == 'phone_number') {
+                if (!error.step_data || (error.step_data.form_type == 'phone_number')) {
                     try {
                         console.log(`Waiting for verify code sent to phone`);
                         code = await getPhoneCodePromise(error.number);
