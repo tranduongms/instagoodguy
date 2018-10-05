@@ -35,7 +35,7 @@ class Client {
         this.jar = request.jar(this.cookieStore);
         this.request = request.defaults({
             headers: this.defaultHeaders(),
-            timeout: 60000,
+            timeout: 180000,
             proxy: proxy,
             jar: this.jar,
             gzip: true
@@ -373,6 +373,7 @@ class Client {
                 'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache'
             },
+            timeout: 120000,
             json: true,
             gzip: true,
             jar: this.jar,
