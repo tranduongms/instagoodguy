@@ -175,7 +175,7 @@ class Client {
                 if ((err.statusCode == 400) && (err.error.challenge)) {
                     throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
                 } else {
-                    console.error(err);
+                    throw err;
                 }
             });
     }
