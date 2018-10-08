@@ -16,6 +16,14 @@ class LoginError extends Error {
     }
 }
 
+class AccountDisabledError extends Error {
+    constructor(username) {
+        super(`Account ${username} disabled!`);
+        this.name = 'AccountDisabledError';
+        this.username = username;
+    }
+}
+
 class CheckpointChallengeError extends Error {
     constructor(username, challenge) {
         super(`Account ${username} checkpoint challenge!`);
@@ -28,5 +36,6 @@ class CheckpointChallengeError extends Error {
 module.exports = {
     CookieNotValidError,
     LoginError,
+    AccountDisabledError,
     CheckpointChallengeError
 }

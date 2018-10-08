@@ -175,6 +175,8 @@ class Client {
             .catch(requestErrors.StatusCodeError, err => {
                 if ((err.statusCode == 400) && (err.error.challenge)) {
                     throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
+                } else if ((err.statusCode == 400) && (err.response.indexOf('account has been disabled') >= 0)) {
+                    throw new Exceptions.AccountDisabledError(this.username);
                 } else {
                     throw err;
                 }
