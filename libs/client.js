@@ -11,6 +11,7 @@ const hmac = require('crypto-js/hmac-sha256');
 const sizeOf = require('image-size');
 const requestErrors = require('request-promise/errors');
 
+const utils = require('./utils');
 const constants = require('./constants');
 const Exceptions = require('./exceptions');
 
@@ -359,6 +360,50 @@ class Client {
                 form: Object.assign({}, this.getAuthenticatedParams(), { media_id: mediaId })
             }
         );
+    }
+
+    async postComment(mediaId, comment) {
+        if (comment.length > 300) {
+            throw new TypeError('The total length of the comment cannot exceed 300 characters.');
+        }
+        let hashtags = comment.match(/#[^#]+\b/g);
+        if (hashtags && hashtags.length > 4) {
+            throw new TypeError('The comment cannot contain more than 4 hashtags.');
+        }
+        let urls = comment.match(/\bhttps?:\/\/\S+\.\S+/g);
+        if (urls && urls.length > 1) {
+            throw new TypeError('The comment cannot contain more than 1 URL.');
+        }
+        let endpoint = `media/${mediaId}/comment/`;
+        let params = {
+            'comment_text': comment,
+            'user_breadcrumb': utils.generateUserBreadcrumb(comment.length),
+            'idempotence_token': uuid4(),
+            'containermodule': 'comments_feed_timeline',
+            'radio_type': 'wifi-none',
+        }
+        return this.callApi(endpoint, { form: Object.assign({}, params, this.getAuthenticatedParams()) });
+    }
+
+    async postLike(mediaId, moduleName = 'feed_timeline') {
+        // param module_name: Example: 'feed_timeline', 'video_view', 'photo_view'
+        let endpoint = `media/${mediaId}/like/`;
+        let params = {
+            'media_id': mediaId,
+            'module_name': moduleName,
+            'radio_type': 'wifi-none',
+        }
+        // d query param = flag for double tap
+        return this.callApi(endpoint, { form: Object.assign({}, params, this.getAuthenticatedParams()), qs: { 'd': '1' } });
+    }
+
+    async followUser(userId) {
+        let endpoint = `friendships/create/${userId}/`;
+        let params = {
+            'user_id': userId,
+            'radio_type': 'wifi-none'
+        };
+        return this.callApi(endpoint, { form: Object.assign({}, params, this.getAuthenticatedParams()) });
     }
 
     async passChallenge(error, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method = 'email') {
