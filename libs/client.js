@@ -184,6 +184,9 @@ class Client {
     }
 
     async login() {
+        if (this.proxy) {
+            console.log(`Account ${this.username} login using proxy ${this.proxy}`);
+        }
         await this.callApi(
             'si/fetch_headers/',
             {
