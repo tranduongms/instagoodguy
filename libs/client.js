@@ -174,7 +174,7 @@ class Client {
             .post(url, option)
             .catch(requestErrors.StatusCodeError, err => {
                 if (err.statusCode == 400) {
-                    if (typeof(err.error)=='string') {
+                    if (typeof (err.error) == 'string') {
                         err.error = JSON.parse(err.error);
                     }
                     if (err.error.challenge) {
@@ -504,6 +504,8 @@ class Client {
                     throw new Error(`Can't bypass challenge, ${err.message}`);
                 });
                 console.log(`Pass challenge success`);
+            } else if (error.step_name == 'delta_login_review') {
+                throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
             } else {
                 throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
             }
