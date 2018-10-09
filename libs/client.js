@@ -505,7 +505,7 @@ class Client {
                 });
                 console.log(`Pass challenge success`);
             } else {
-                throw new Error(`Verify method not supported: ${error}`);
+                throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
             }
         }
     }
