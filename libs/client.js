@@ -173,10 +173,17 @@ class Client {
         return this.request
             .post(url, option)
             .catch(requestErrors.StatusCodeError, err => {
-                if ((err.statusCode == 400) && (err.error.challenge)) {
-                    throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
-                } else if ((err.statusCode == 400) && err.error.message && (err.error.message.indexOf('account has been disabled') >= 0)) {
-                    throw new Exceptions.AccountDisabledError(this.username);
+                if (err.statusCode == 400) {
+                    if (typeof(err.error)=='string') {
+                        err.error = JSON.parse(err.error);
+                    }
+                    if (err.error.challenge) {
+                        throw new Exceptions.CheckpointChallengeError(this.username, err.error.challenge);
+                    } else if (err.error.message && (err.error.message.indexOf('account has been disabled') >= 0)) {
+                        throw new Exceptions.AccountDisabledError(this.username);
+                    } else {
+                        throw err;
+                    }
                 } else {
                     throw err;
                 }
