@@ -25,7 +25,7 @@ class Client {
         this.storePath = path.join(os.tmpdir(), this.username + '.json');
         if (!fs.existsSync(this.storePath)) {
             if (typeof (oldCookiesString) == 'string') {
-                this.importOldCookies(oldCookiesString);
+                this._importOldCookies(oldCookiesString);
             } else {
                 fs.writeFileSync(this.storePath, '');
             }
@@ -35,21 +35,21 @@ class Client {
                 JSON.parse(data);
             } catch (err) {
                 if (typeof (oldCookiesString) == 'string') {
-                    this.importOldCookies(oldCookiesString);
+                    this._importOldCookies(oldCookiesString);
                 } else {
                     fs.writeFileSync(this.storePath, '');
                 }
             }
         }
-        this.cookieStore = new FileCookieStore(this.storePath);
-        this.jar = request.jar(this.cookieStore);
+        if (!this.cookieStore) this.cookieStore = new FileCookieStore(this.storePath);
+        if (!this.jar) this.jar = request.jar(this.cookieStore);
         this.request = request.defaults({
             headers: this.defaultHeaders(),
             timeout: 180000,
             proxy: proxy,
             jar: this.jar,
             gzip: true
-        })
+        });
         this.uuid = uuid4();
         this.deviceId = this.getDeviceId();
         this.adId = this.getAdId();
@@ -96,14 +96,14 @@ class Client {
         });
     }
 
-    importOldCookies(oldCookiesString) {
+    _importOldCookies(oldCookiesString) {
         try {
             console.log(`Account ${this.username} import old cookies to ${this.storePath}`);
             fs.writeFileSync(this.storePath, '');
             let old = JSON.parse(oldCookiesString);
             if (old && (old instanceof Array) && old.length > 0) {
-                console.log(`Account ${this.username} found ${old.length} cookies`);
-                let jar = request.jar(new FileCookieStore(this.storePath));
+                this.cookieStore = new FileCookieStore(this.storePath);
+                this.jar = request.jar(this.cookieStore);
                 for (let i = 0; i < old.length; i++) {
                     let cookie = old[i];
                     let domain = (cookie.Domain || cookie.domain);
@@ -111,7 +111,7 @@ class Client {
                     let path = cookie.Path || cookie.path || '/';
                     let key = cookie.Name || cookie.name || cookie.key;
                     let value = cookie.Value || cookie.value;
-                    jar.setCookie(`${key}=${value}; Domain=${domain}; Path=${path}`, `https://${url}${path}`);
+                    this.jar.setCookie(`${key}=${value}; Domain=${domain}; Path=${path}`, `https://${url}${path}`);
                 }
             } else {
                 throw new Error('oldCookiesString should be JSON stringify of array of cookies');
