@@ -17,19 +17,28 @@ const Exceptions = require('./exceptions');
 
 
 class Client {
-    constructor(username, password, proxy) {
+    constructor(username, password, proxy, oldCookiesString) {
         this.username = username;
         this.password = password;
         this.proxy = proxy;
-        let storePath = path.join(os.tmpdir(), this.username + '.json');
-        if (!fs.existsSync(storePath)) {
-            fs.writeFileSync(storePath, '');
+        this.oldCookiesString = oldCookiesString;
+        this.storePath = path.join(os.tmpdir(), this.username + '.json');
+        if (!fs.existsSync(this.storePath)) {
+            if (typeof (oldCookiesString) == 'string') {
+                this.importOldCookies(oldCookiesString);
+            } else {
+                fs.writeFileSync(storePath, '');
+            }
         } else {
             let data = fs.readFileSync(storePath).toString();
             try {
                 JSON.parse(data);
-            } catch (error) {
-                fs.writeFileSync(storePath, '');
+            } catch (err) {
+                if (typeof (oldCookiesString) == 'string') {
+                    this.importOldCookies(oldCookiesString);
+                } else {
+                    fs.writeFileSync(storePath, '');
+                }
             }
         }
         this.cookieStore = new FileCookieStore(storePath);
@@ -85,6 +94,29 @@ class Client {
                 resolve(cookies || []);
             })
         });
+    }
+
+    importOldCookies(oldCookiesString) {
+        try {
+            fs.writeFileSync(this.storePath, '');
+            let old = JSON.parse(oldCookiesString);
+            if (old && (old instanceof Array) && old.length > 0) {
+                let jar = request.jar(new FileCookieStore(this.storePath));
+                for (let i = 0; i < old.length; i++) {
+                    let cookie = old[i];
+                    let domain = (cookie.Domain || cookie.domain);
+                    let url = domain.replace(/^\.+/, 'www.');
+                    let path = cookie.Path || cookie.path || '/';
+                    let key = cookie.Name || cookie.name || cookie.key;
+                    let value = cookie.Value || cookie.value;
+                    jar.setCookie(`${key}=${value}; Domain=${domain}; Path=${path}`, `https://${url}${path}`);
+                }
+            } else {
+                throw new Error('oldCookiesString should be JSON stringify of array of cookies');
+            }
+        } catch (err) {
+            console.error('Error using old cookies', err.message);
+        }
     }
 
     getCsrfToken() {
