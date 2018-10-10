@@ -98,9 +98,11 @@ class Client {
 
     importOldCookies(oldCookiesString) {
         try {
+            console.log(`Account ${this.username} import old cookies to ${this.storePath}`);
             fs.writeFileSync(this.storePath, '');
             let old = JSON.parse(oldCookiesString);
             if (old && (old instanceof Array) && old.length > 0) {
+                console.log(`Account ${this.username} found ${old.length} cookies`);
                 let jar = request.jar(new FileCookieStore(this.storePath));
                 for (let i = 0; i < old.length; i++) {
                     let cookie = old[i];
