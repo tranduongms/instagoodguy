@@ -27,21 +27,21 @@ class Client {
             if (typeof (oldCookiesString) == 'string') {
                 this.importOldCookies(oldCookiesString);
             } else {
-                fs.writeFileSync(storePath, '');
+                fs.writeFileSync(this.storePath, '');
             }
         } else {
-            let data = fs.readFileSync(storePath).toString();
+            let data = fs.readFileSync(this.storePath).toString();
             try {
                 JSON.parse(data);
             } catch (err) {
                 if (typeof (oldCookiesString) == 'string') {
                     this.importOldCookies(oldCookiesString);
                 } else {
-                    fs.writeFileSync(storePath, '');
+                    fs.writeFileSync(this.storePath, '');
                 }
             }
         }
-        this.cookieStore = new FileCookieStore(storePath);
+        this.cookieStore = new FileCookieStore(this.storePath);
         this.jar = request.jar(this.cookieStore);
         this.request = request.defaults({
             headers: this.defaultHeaders(),
