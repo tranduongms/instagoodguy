@@ -386,6 +386,7 @@ class Client {
             }
             let res = await this.callApi('upload/photo/', { formData });
             if (res.status == 'ok' && res.upload_id) {
+                await new Promise(res=>setTimeout(res, 4000));
                 return this.configPhoto(res.upload_id, size, caption, disableComments, isSidecar);
             } else {
                 throw {
