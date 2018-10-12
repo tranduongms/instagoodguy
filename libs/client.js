@@ -261,7 +261,6 @@ class Client {
     }
 
     async currentUser() {
-        if (!this.loggedIn) return;
         return this.callApi('accounts/current_user/', {
             form: this.getAuthenticatedParams(),
             qs: { 'edit': 'true' }
@@ -273,7 +272,6 @@ class Client {
     }
 
     async updateProfile(update = {}) {
-        if (!this.loggedIn) return;
         let user = await this.currentUser();
         let profile = {
             'username': user.username,
