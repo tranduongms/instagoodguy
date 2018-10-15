@@ -538,7 +538,11 @@ class Client {
                 });
                 console.log(`Pass challenge success`);
             } else if (error.step_name == 'delta_login_review') {
-                throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
+                // throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
+                await req.post(error.apiUrl, {
+                    form: { choice: 1 }
+                });
+                console.log(`Pass challenge success`);
             } else {
                 throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
             }
