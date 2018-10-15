@@ -539,16 +539,11 @@ class Client {
                 console.log(`Pass challenge success`);
             } else if (error.step_name == 'delta_login_review') {
                 try {
+                    let csrfToken = await this.getCsrfToken();
                     await req.post(error.apiUrl, {
                         form: {
                             approve: 'It Was Me',
-                            csrfmiddlewaretoken: this.csrfToken
-                        }
-                    });
-                    await req.post(error.apiUrl, {
-                        form: {
-                            approve: 'It Was Me',
-                            csrfmiddlewaretoken: this.csrfToken
+                            csrfmiddlewaretoken: csrfToken
                         }
                     }).catch(requestErrors.StatusCodeError, err => {
                         if (err.statusCode == 302)
@@ -559,7 +554,7 @@ class Client {
                     res = await req.post(error.apiUrl, {
                         form: {
                             OK: 'OK',
-                            csrfmiddlewaretoken: this.csrfToken
+                            csrfmiddlewaretoken: csrfToken
                         }
                     });
                     console.log(`Pass challenge success`);
