@@ -384,7 +384,7 @@ class Client {
             }
             let res = await this.callApi('upload/photo/', { formData });
             if (res.status == 'ok' && res.upload_id) {
-                await new Promise(res=>setTimeout(res, 4000));
+                await new Promise(res => setTimeout(res, 4000));
                 return this.configPhoto(res.upload_id, size, caption, disableComments, isSidecar);
             } else {
                 throw {
@@ -454,13 +454,13 @@ class Client {
     async passChallenge(error, getPhoneNumberPromise, getPhoneCodePromise, getEmailCodePromise, method = 'email') {
         let req = request.defaults({
             headers: {
-                'User-Agent': constants.IPHONE_USER_AGENT,
                 'Connection': 'close',
                 'Accept': '*/*',
                 'Accept-Language': 'en-US',
                 'Accept-Encoding': 'gzip, deflate',
                 'Upgrade-Insecure-Requests': '1',
                 'Cache-Control': 'no-cache',
+                'User-Agent': constants.IPHONE_USER_AGENT,
                 'Pragma': 'no-cache'
             },
             timeout: 120000,
@@ -538,11 +538,34 @@ class Client {
                 });
                 console.log(`Pass challenge success`);
             } else if (error.step_name == 'delta_login_review') {
-                throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
-                // await req.post(error.apiUrl, {
-                //     form: { choice: 1 }
-                // });
-                // console.log(`Pass challenge success`);
+                try {
+                    await req.post(error.apiUrl, {
+                        form: {
+                            approve: 'It Was Me',
+                            csrfmiddlewaretoken: this.csrfToken
+                        }
+                    });
+                    await req.post(error.apiUrl, {
+                        form: {
+                            approve: 'It Was Me',
+                            csrfmiddlewaretoken: this.csrfToken
+                        }
+                    }).catch(requestErrors.StatusCodeError, err => {
+                        if (err.statusCode == 302)
+                            return;
+                        else
+                            throw err;
+                    });
+                    res = await req.post(error.apiUrl, {
+                        form: {
+                            OK: 'OK',
+                            csrfmiddlewaretoken: this.csrfToken
+                        }
+                    });
+                    console.log(`Pass challenge success`);
+                } catch (err) {
+                    throw new Error(`Can't verify "It Was Me": ${JSON.stringify(err)}`);
+                }
             } else {
                 throw new Error(`Verify method not supported: ${JSON.stringify(error)}`);
             }
