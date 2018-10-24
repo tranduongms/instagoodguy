@@ -275,11 +275,11 @@ class Client {
         let user = await this.currentUser();
         let profile = {
             'username': user.username,
-            'gender': user.gender,
-            'phone_number': user.phone_number,
-            'first_name': user.full_name,
-            'biography': user.biography,
-            'external_url': user.external_url,
+            'gender': user.gender || 1,
+            'phone_number': user.phone_number || '',
+            'first_name': user.full_name || '',
+            'biography': user.biography || '',
+            'external_url': user.external_url || '',
             'email': user.email
         };
         profile = Object.assign({}, profile, update);
